@@ -68,7 +68,7 @@ class MusicGenServer:
     @modal.enter()
     def load_model(self):
         from acestep.pipeline_ace_step import ACEStepPipeline
-        from transformers import AutoModelForCausalLM, AutoTokenizer
+        from transformers import AutoTokenizer, AutoModelForCausalLM
         from diffusers import AutoPipelineForText2Image
         import torch
 
@@ -264,14 +264,10 @@ def main():
         full_described_song= "A chill lo-fi track with smooth beats and relaxing melodies, perfect for studying or unwinding after a long day.",
         guidance_scale= 15,)
     
-    headers ={
-        "Modal-Key": "wk-zKwoMn9vg2jfXUg0gBSQSw",
-        "Modal-Secret": "ws-BbYGXQegoqfzMi2Y88Z9mE"
-    }
     
     payload = request_data.model_dump()
 
-    response = requests.post(endpoint_url,json=payload, headers=headers)
+    response = requests.post(endpoint_url,json=payload)
     response.raise_for_status()
     result = GenerateMusicResponseS3(**response.json())
 
