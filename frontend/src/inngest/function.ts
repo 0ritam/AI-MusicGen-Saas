@@ -124,28 +124,41 @@ export const generateSong = inngest.createFunction(
         });
       });
 
+    console.log('Making request to Modal API...');
+    console.log('Endpoint:', endpoint);
+    console.log('Request body:', JSON.stringify(body, null, 2));
+
     const response = await step.fetch(endpoint, {
       method: "POST",
       body: JSON.stringify(body),
       headers: {
         "Content-Type": "application/json",
-        "Modal-Key": env.MODAL_KEY,
-        "Modal-Secret": env.MODAL_SECRET,
       },
     })
 
-  //   console.log('Modal response status:', response.status);
-  // console.log('Modal response headers:', Object.fromEntries(response.headers.entries()));
+    console.log('Modal API request completed');
+    console.log('Response status:', response.status);
+    console.log('Response ok:', response.ok);
 
+    // Parse the response immediately after the fetch
+    let responseData = null;
+    if (response.ok) {
+      try {
+        responseData = (await response.json()) as {
+          s3_key: string;
+          cover_image_s3_key: string;
+          categories: string[];
+        };
+        console.log('Modal response data:', responseData);
+      } catch (error) {
+        console.error('Failed to parse JSON response:', error);
+      }
+    } else {
+      const errorText = await response.text();
+      console.error('Modal API error:', response.status, errorText);
+    }
 
     await step.run("update-song-result", async () => {
-      const responseData = response.ok
-      ? ((await response.json()) as {
-              s3_key: string;
-              cover_image_s3_key: string;
-              categories: string[];
-            }) 
-            : null;
 
           await db.song.update({
           where: {
