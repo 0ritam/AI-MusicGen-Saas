@@ -3,7 +3,7 @@ import { auth } from "~/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import CreateSong from "~/components/create";
-import { SongPanel } from "~/components/create/create-panel";
+import { SongPanel } from "~/components/create/song-panel";
 
 export default async function HomePage() {
   
