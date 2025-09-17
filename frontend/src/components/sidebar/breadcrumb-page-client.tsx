@@ -10,6 +10,8 @@ export default function BreadcrumbPageClient() {
     <BreadcrumbPage>
       {path === "/" && "Home"}
       {path === "/create" && "Create"}
+      {path.startsWith("/account") && "Account"}
+      {path === "/customer-portal" && "Customer Portal"}
     </BreadcrumbPage>
   );
 }
