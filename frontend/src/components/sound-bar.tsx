@@ -4,7 +4,7 @@ import { usePlayerStore } from "~/stores/use-player-store";
 import { Card } from "./ui/card";
 import { Download, MoreHorizontal, Music2, Pause, Play, Volume2 } from "lucide-react";
 import { Button } from "./ui/button";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Slider } from "./ui/slider";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 
@@ -16,17 +16,78 @@ export default function Soundbar() {
   const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-//     const togglePlay = async () => {
-//     if (!track?.url || !audioRef.current) return;
 
-//     if (isPlaying) {
-//       audioRef.current.pause();
-//       setIsPlaying(false);
-//     } else {
-//       await audioRef.current.play();
-//       setIsPlaying(true);
-//     }
-//   };
+    useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const updateTime = () => setCurrentTime(audio.currentTime);
+
+    const updateDuration = () => {
+      if (!isNaN(audio.duration)) {
+        setDuration(audio.duration);
+      }
+    };
+
+    const handleTrackEnd = () => {
+      setIsPlaying(false);
+      setCurrentTime(0);
+    };
+
+    audio.addEventListener("timeupdate", updateTime);
+    audio.addEventListener("loadedmetadata", updateDuration);
+    audio.addEventListener("ended", handleTrackEnd);
+
+    return () => {
+      audio.removeEventListener("timeupdate", updateTime);
+      audio.removeEventListener("loadedmetadata", updateDuration);
+      audio.removeEventListener("ended", handleTrackEnd);
+    };
+  }, [track]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume[0]! / 100;
+    }
+  }, [volume]);
+
+
+
+  useEffect(() => {
+    if (audioRef.current && track?.url) {
+      setCurrentTime(0);
+      setDuration(0);
+
+      audioRef.current.src = track.url;
+      audioRef.current.load();
+
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsPlaying(true);
+          })
+          .catch((error) => {
+            console.error("Playback failed: ", error);
+            setIsPlaying(false);
+          });
+      }
+    }
+  }, [track]);
+
+  
+
+    const togglePlay = async () => {
+    if (!track?.url || !audioRef.current) return;
+
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      await audioRef.current.play();
+      setIsPlaying(true);
+    }
+  };
 
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
@@ -34,12 +95,14 @@ export default function Soundbar() {
     return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   };
 
-  //   const handleSeek = (value: number[]) => {
-  //   if (audioRef.current && value[0] !== undefined) {
-  //     audioRef.current.currentTime = value[0];
-  //     setCurrentTime(value[0]);
-  //   }
-  // };
+    const handleSeek = (value: number[]) => {
+    if (audioRef.current && value[0] !== undefined) {
+      audioRef.current.currentTime = value[0];
+      setCurrentTime(value[0]);
+    }
+  };
+
+   if (!track) return null;
 
   return (
     <div className="px-4 pb-2">
@@ -68,7 +131,7 @@ export default function Soundbar() {
 
             {/* Centered controls */}
             <div className="absolute left-1/2 -translate-x-1/2">
-              <Button variant="ghost" size="icon" >
+              <Button variant="ghost" size="icon" onClick={togglePlay}>
                 {isPlaying ? (
                   <Pause className="h-4 w-4" />
                 ) : (
@@ -121,7 +184,7 @@ export default function Soundbar() {
               value={[currentTime]}
               max={duration || 100}
               step={1}
-              // onValueChange={handleSeek}
+              onValueChange={handleSeek}
             />
             <span className="text-muted-foreground w-8 text-right text-[10px]">
               {formatTime(duration)}
