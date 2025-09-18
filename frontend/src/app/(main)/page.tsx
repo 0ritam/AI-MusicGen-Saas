@@ -1,7 +1,6 @@
 import { auth } from "~/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import CreateSong from "~/components/create";
 import { db } from "~/server/db";
 import { getPresignedUrl } from "~/actions/generation";
 import { Music } from "lucide-react";

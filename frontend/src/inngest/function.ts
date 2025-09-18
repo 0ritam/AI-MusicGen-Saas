@@ -1,4 +1,3 @@
-import { i } from "node_modules/better-auth/dist/shared/better-auth.DnUZno9_";
 import { inngest } from "./client";
 import { db } from "~/server/db";
 import { env } from "~/env";
@@ -9,16 +8,20 @@ export const generateSong = inngest.createFunction(
     limit: 1,
     key: "event.data.userId"
   },
-  onFailure: async({event, error}) => {
-    await db.song.update({
-      where:{
-        id: event?.data?.event?.data?.songId,
-        
-      },
-      data: {
-          status: "failed",
-      },
-    })
+  onFailure: async({event, error: _error}) => {
+    const eventData = event?.data?.event?.data as { songId?: string };
+    const songId = eventData?.songId;
+    if (songId) {
+      await db.song.update({
+        where:{
+          id: songId,
+          
+        },
+        data: {
+            status: "failed",
+        },
+      })
+    }
   }
 },
   
